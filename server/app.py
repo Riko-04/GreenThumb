@@ -326,6 +326,7 @@ def get_layouts():
     layouts = Layout.query.filter_by(user_id=user_id).all()
     return jsonify([layout.to_dict() for layout in layouts]), 200
 
+
 @app.route('/layouts', methods=['POST'])
 @jwt_required()
 def create_layout():
@@ -334,13 +335,6 @@ def create_layout():
     # Check if required fields are present
     if not data or 'name' not in data or 'layout_data' not in data:
         abort(400, description='Missing required fields')
-
-    # Validate grid_columns, defaulting to 3 if missing or invalid
-    grid_columns = data.get('grid_columns')
-    if grid_columns is None:
-        abort(400, description='grid_columns is required')
-    if not isinstance(grid_columns, int) or grid_columns <= 0:
-        abort(400, description='Invalid grid_columns value')
 
     user_id = get_jwt_identity()
 
@@ -354,7 +348,6 @@ def create_layout():
     layout = Layout(
         name=data['name'],
         layout_data=layout_data_str,
-        grid_columns=grid_columns,
         user_id=user_id
     )
     db.session.add(layout)
@@ -373,14 +366,7 @@ def update_layout(id):
 
     data = request.json
 
-    # Check if grid_columns is provided and valid
-    if 'grid_columns' in data:
-        grid_columns = data['grid_columns']
-        if not isinstance(grid_columns, int) or grid_columns <= 0:
-            abort(400, description='Invalid grid_columns value')
-        layout.grid_columns = grid_columns
-
-    # Update other fields if provided
+    # Update fields if provided
     if 'name' in data:
         layout.name = data['name']
 

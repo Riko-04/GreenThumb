@@ -12,12 +12,12 @@ import {
     FormLabel,
     Image,
     useDisclosure,
+    useColorMode,
     useToast,
     VStack,
     Text,
     Grid,
     GridItem,
-    IconButton,
     Input,
     Icon,
     Heading,
@@ -33,7 +33,9 @@ const Layouts = () => {
     const [layoutName, setLayoutName] = useState('');
     const [selectedLayoutId, setSelectedLayoutId] = useState(null);
     const { isOpen: isAddModalOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
+    const { isOpen: isClearModalOpen, onOpen: onClearOpen, onClose: onClearClose } = useDisclosure();
     const toast = useToast();
+    const { colorMode } = useColorMode();
 
     const gridColumns = 5; // Set grid columns to a constant value of 5
 
@@ -88,6 +90,7 @@ const Layouts = () => {
 
     const handleClearLayout = () => {
         setLayout([]);
+        onClearClose(); // Close the confirmation modal after clearing layout
     };
 
     const handleSaveLayout = async () => {
@@ -113,7 +116,9 @@ const Layouts = () => {
                 })),
             };
 
+            // Check if a layout already exists (we have a selectedLayoutId)
             if (selectedLayoutId) {
+                // Update existing layout
                 await updateLayout(selectedLayoutId, layoutData);
                 toast({
                     title: 'Layout updated',
@@ -123,8 +128,9 @@ const Layouts = () => {
                     isClosable: true,
                 });
             } else {
+                // Add new layout
                 const newLayout = await addLayout(layoutData);
-                setSelectedLayoutId(newLayout.id);
+                setSelectedLayoutId(newLayout.id); // Save new layout ID
                 toast({
                     title: 'Layout saved',
                     description: 'Your layout has been saved successfully.',
@@ -189,7 +195,7 @@ const Layouts = () => {
                 <Button onClick={handleSaveLayout} leftIcon={<FaSave />}>
                     Save Layout
                 </Button>
-                <Button colorScheme="red" onClick={handleClearLayout} leftIcon={<FaTrash />}>
+                <Button colorScheme="red" onClick={onClearOpen} leftIcon={<FaTrash />}>
                     Clear Layout
                 </Button>
             </HStack>
@@ -198,7 +204,7 @@ const Layouts = () => {
                 <Droppable droppableId="layoutGrid">
                     {(provided) => (
                         <Grid
-                            templateColumns={`repeat(${gridColumns}, 1fr)`}
+                            templateColumns={`repeat(${gridColumns}, 1fr)`} // Ensures consistent size with fixed number of columns
                             gap={6}
                             mt={4}
                             {...provided.droppableProps}
@@ -217,6 +223,7 @@ const Layouts = () => {
                                                 borderRadius="md"
                                                 shadow="lg"
                                                 color="white"
+                                                height="200px" // Fixed height to prevent resizing
                                             >
                                                 <Image
                                                     src={plant.img_url}
@@ -238,9 +245,13 @@ const Layouts = () => {
                 </Droppable>
             </DragDropContext>
 
+            {/* Add Plant Modal */}
             <Modal isOpen={isAddModalOpen} onClose={onAddClose}>
                 <ModalOverlay />
-                <ModalContent>
+                <ModalContent
+                    bg={colorMode === 'dark' ? 'gray.800' : 'white'} // Set modal background color based on the theme
+                    color={colorMode === 'dark' ? 'white' : 'black'} // Set text color based on the theme
+                >
                     <ModalHeader>Select Plant</ModalHeader>
                     <ModalBody>
                         <VStack align="start" spacing={4}>
@@ -249,30 +260,47 @@ const Layouts = () => {
                                     key={plant.id}
                                     p={4}
                                     borderRadius="md"
-                                    bg="gray.700"
-                                    boxShadow="md"
+                                    bg={colorMode === 'dark' ? 'gray.700' : 'gray.100'} // Set background color based on theme
                                     w="full"
                                     cursor="pointer"
-                                    _hover={{ bg: 'gray.600' }}
-                                    onClick={() => {
-                                        handleAddImage(plant);
-                                        onAddClose();
-                                    }}
+                                    _hover={{ bg: colorMode === 'dark' ? 'gray.600' : 'gray.200' }}
+                                    onClick={() => handleAddImage(plant)}
                                 >
-                                    <Image
-                                        src={plant.img_url}
-                                        alt={plant.name}
-                                        boxSize="100px"
-                                        objectFit="cover"
-                                    />
-                                    <Text>{plant.name}</Text>
+                                    <HStack spacing={4}>
+                                        <Image
+                                            src={plant.img_url}
+                                            alt={plant.name}
+                                            boxSize="50px"
+                                            objectFit="cover"
+                                        />
+                                        <Text>{plant.name}</Text>
+                                    </HStack>
                                 </Box>
                             ))}
                         </VStack>
                     </ModalBody>
                     <ModalFooter>
                         <Button variant="ghost" onClick={onAddClose}>
-                            Close
+                            Cancel
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Clear Layout Confirmation Modal */}
+            <Modal isOpen={isClearModalOpen} onClose={onClearClose}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Confirm Clear Layout</ModalHeader>
+                    <ModalBody>
+                        <Text>Are you sure you want to clear your layout? This action cannot be undone.</Text>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="ghost" onClick={onClearClose}>
+                            Cancel
+                        </Button>
+                        <Button colorScheme="red" onClick={handleClearLayout}>
+                            Clear Layout
                         </Button>
                     </ModalFooter>
                 </ModalContent>

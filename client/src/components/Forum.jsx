@@ -302,7 +302,7 @@ const Forum = () => {
                     <Flex justifyContent="space-between" alignItems="center">
                       <Text>{comment.content}</Text>
                       <Text fontSize="sm" color="gray.500">
-                        - {comment.author}
+                        ~ {comment.author}
                       </Text>
                       <Menu>
                         <MenuButton as={IconButton} icon={<BsThreeDotsVertical />} variant="ghost" size="sm" />
