@@ -100,7 +100,7 @@ const Forum = () => {
 
   const handleUpdateForumPost = async () => {
     try {
-      await updateForumPost(currentPost.id, { title, content });
+      await updateForumPost(currentPost.id, title, content);
       toast({
         title: 'Post updated successfully',
         status: 'success',
@@ -241,7 +241,12 @@ const Forum = () => {
         />
         <Heading size="md">Community Forum</Heading>
         <Text fontSize="lg" textAlign="center">
-        Share your thoughts and experiences with other gardeners. Connect, learn, and grow together!
+        <Box mb={2}>
+          Share your thoughts and experiences with other gardeners. Connect, learn, and grow together!
+        </Box>
+        <Box>
+          Note: Please keep your responses respectful and considerate of others.
+        </Box>
         </Text>
       </VStack>
       <Text color="red.500" mt={0} mb={2}>Changes can only be made by the owner</Text>
@@ -255,9 +260,19 @@ const Forum = () => {
             <Box key={post.id} p={4} borderRadius="md" shadow="md" bg={colorMode === 'dark' ? 'gray.700' : 'white'}>
               <Flex justifyContent="space-between" alignItems="center">
                 <Heading size="md">{post.title}</Heading>
-                <Text fontSize="sm" color="gray.500">
-                  {post.username}
-                </Text>
+                <Box>
+                  <Text
+                    fontSize="sm"
+                    color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
+                    bg={colorMode === 'dark' ? 'gray.700' : 'gray.200'}
+                    p={1}
+                    px={2}
+                    borderRadius="full"
+                    shadow="inner"
+                  >
+                    Posted by {post.author}
+                  </Text>
+                </Box>
                 <Menu>
                   <MenuButton as={IconButton} icon={<BsThreeDotsVertical />} variant="ghost" />
                   <MenuList>
@@ -287,7 +302,7 @@ const Forum = () => {
                     <Flex justifyContent="space-between" alignItems="center">
                       <Text>{comment.content}</Text>
                       <Text fontSize="sm" color="gray.500">
-                        - {comment.username}
+                        - {comment.author}
                       </Text>
                       <Menu>
                         <MenuButton as={IconButton} icon={<BsThreeDotsVertical />} variant="ghost" size="sm" />
@@ -303,28 +318,23 @@ const Forum = () => {
                     </Flex>
                   </Box>
                 ))}
-                <Flex w="100%">
+                <Flex mt={2} w="100%">
                   <Input
-                    placeholder="Add a comment..."
+                    placeholder="Write a comment..."
                     value={commentContents[post.id] || ''}
                     onChange={(e) => handleCommentChange(post.id, e.target.value)}
                     size="sm"
+                    mr={2}
                   />
-                  <Button
-                    ml={2}
-                    size="sm"
-                    colorScheme="teal"
-                    onClick={() => handleAddComment(post.id)}
-                    isDisabled={!commentContents[post.id]}
-                  >
-                    Post
+                  <Button onClick={() => handleAddComment(post.id)} colorScheme="teal" size="sm" isDisabled={!commentContents[post.id]?.trim()}>
+                    Comment
                   </Button>
                 </Flex>
               </VStack>
             </Box>
           ))
         ) : (
-          <Text>No posts yet. Be the first to share something!</Text>
+          <Text>No posts available.</Text>
         )}
       </VStack>
 
@@ -338,18 +348,20 @@ const Forum = () => {
               placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              mb={4}
+              mb={3}
             />
             <Textarea
               placeholder="Content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={6}
             />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="teal" onClick={handleAddOrUpdateForumPost}>
-              {currentPost ? 'Update Post' : 'Add Post'}
+            <Button onClick={handleAddOrUpdateForumPost} colorScheme="teal">
+              {currentPost ? 'Update' : 'Add'}
+            </Button>
+            <Button onClick={closeModal} ml={3}>
+              Cancel
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -362,15 +374,17 @@ const Forum = () => {
           <ModalCloseButton />
           <ModalBody>
             <Textarea
-              placeholder="Edit your comment"
+              placeholder="Edit Comment"
               value={editCommentContent}
               onChange={(e) => setEditCommentContent(e.target.value)}
-              rows={4}
             />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="teal" onClick={handleUpdateComment}>
-              Update Comment
+            <Button onClick={handleUpdateComment} colorScheme="teal">
+              Update
+            </Button>
+            <Button onClick={() => setIsCommentModalOpen(false)} ml={3}>
+              Cancel
             </Button>
           </ModalFooter>
         </ModalContent>

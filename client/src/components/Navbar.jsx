@@ -55,12 +55,16 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
         maxW="1200px"
         justify="space-between"
       >
-        {/* Logo and app name */}
-        <HStack spacing={2} mr="auto">
-          <Box as={FaThumbsUp} color={logoColor} boxSize="30px" />
-          <Text color={logoColor} {...fontStyle}>
-            GreenThumb
-          </Text>
+        {/* Logo and app name wrapped in RouterLink for navigation */}
+        <HStack spacing={2} mr="auto" align="center">
+          <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
+            <HStack spacing={2} align="center">
+              <Box as={FaThumbsUp} color={logoColor} boxSize="30px" />
+              <Text color={logoColor} {...fontStyle}>
+                GreenThumb
+              </Text>
+            </HStack>
+          </Link>
         </HStack>
 
         {isDesktop ? (

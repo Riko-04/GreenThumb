@@ -495,26 +495,34 @@ export const fetchForumPosts = async () => {
     }
   };
   
-  // Update a forum post
-  export const updateForumPost = async (postId, title, content) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/forum_posts/${postId}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        body: JSON.stringify({ title, content }),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Error updating forum post: ${response.statusText}`);
-      }
-  
-      return await response.json();
-    } catch (error) {
-      console.error(error);
-      throw error;
+ // Update a forum post
+ export const updateForumPost = async (postId, title, content) => {
+  if (!title || !content) {
+    throw new Error('Title and content are required');
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/forum_posts/${postId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      credentials: 'include', // Only needed if using cookies
+      body: JSON.stringify({ title, content }),
+    });
+
+    if (!response.ok) {
+      const responseBody = await response.text(); // Read raw response body
+      throw new Error(
+        `Error updating forum post: ${response.statusText}. Response: ${responseBody}`
+      );
     }
-  };
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in updateForumPost:', error);
+    throw error;
+  }
+};
+
   
   // Delete a forum post
   export const deleteForumPost = async (postId) => {

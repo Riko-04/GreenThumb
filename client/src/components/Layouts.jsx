@@ -10,7 +10,6 @@ import {
     ModalFooter,
     FormControl,
     FormLabel,
-    Select,
     Image,
     useDisclosure,
     useToast,
@@ -32,10 +31,11 @@ const Layouts = () => {
     const [plants, setPlants] = useState([]);
     const [layout, setLayout] = useState([]);
     const [layoutName, setLayoutName] = useState('');
-    const [gridColumns, setGridColumns] = useState(3);
     const [selectedLayoutId, setSelectedLayoutId] = useState(null);
     const { isOpen: isAddModalOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
     const toast = useToast();
+
+    const gridColumns = 5; // Set grid columns to a constant value of 5
 
     // Fetch plants data
     const fetchPlantsData = useCallback(async () => {
@@ -82,17 +82,14 @@ const Layouts = () => {
         fetchSavedLayouts();
     }, [toast]);
 
-    // Add a plant to the layout
     const handleAddImage = (plant) => {
         setLayout((prevLayout) => [...prevLayout, plant]);
     };
 
-    // Remove a plant from the layout
-    const handleRemovePlant = (plantId) => {
-        setLayout((prevLayout) => prevLayout.filter((plant) => plant.id !== plantId));
+    const handleClearLayout = () => {
+        setLayout([]);
     };
 
-    // Save layout (or update if layout already exists)
     const handleSaveLayout = async () => {
         if (layoutName.trim() === '') {
             toast({
@@ -117,7 +114,6 @@ const Layouts = () => {
             };
 
             if (selectedLayoutId) {
-                // Update an existing layout
                 await updateLayout(selectedLayoutId, layoutData);
                 toast({
                     title: 'Layout updated',
@@ -127,7 +123,6 @@ const Layouts = () => {
                     isClosable: true,
                 });
             } else {
-                // Save as a new layout if no ID is selected
                 const newLayout = await addLayout(layoutData);
                 setSelectedLayoutId(newLayout.id);
                 toast({
@@ -149,7 +144,6 @@ const Layouts = () => {
         }
     };
 
-    // Drag and Drop functionality
     const handleOnDragEnd = (result) => {
         if (!result.destination) return;
 
@@ -187,6 +181,7 @@ const Layouts = () => {
                     onChange={(e) => setLayoutName(e.target.value)}
                 />
             </FormControl>
+
             <HStack spacing={2} alignItems="center" mb={4}>
                 <Button onClick={onAddOpen} leftIcon={<FaThLarge />}>
                     Add Plant to Layout
@@ -194,17 +189,10 @@ const Layouts = () => {
                 <Button onClick={handleSaveLayout} leftIcon={<FaSave />}>
                     Save Layout
                 </Button>
+                <Button colorScheme="red" onClick={handleClearLayout} leftIcon={<FaTrash />}>
+                    Clear Layout
+                </Button>
             </HStack>
-            <FormControl mt={4}>
-                <FormLabel>Grid Columns</FormLabel>
-                <Select value={gridColumns} onChange={(e) => setGridColumns(parseInt(e.target.value, 10))}>
-                    {[2, 3, 4, 5].map((num) => (
-                        <option key={num} value={num}>
-                            {num} Columns
-                        </option>
-                    ))}
-                </Select>
-            </FormControl>
 
             <DragDropContext onDragEnd={handleOnDragEnd}>
                 <Droppable droppableId="layoutGrid">
@@ -225,29 +213,18 @@ const Layouts = () => {
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 bg="gray.700"
-                                                p={4}
+                                                p={0} // Removed padding to let the image fill the entire box
                                                 borderRadius="md"
                                                 shadow="lg"
                                                 color="white"
                                             >
-                                                <VStack spacing={2}>
-                                                    <Image
-                                                        src={plant.img_url}
-                                                        alt={plant.name}
-                                                        boxSize="150px"
-                                                        objectFit="cover"
-                                                        fallbackSrc="https://via.placeholder.com/150"
-                                                    />
-                                                    <Text fontWeight="bold" fontSize="md">
-                                                        {plant.name}
-                                                    </Text>
-                                                    <IconButton
-                                                        aria-label="Delete plant"
-                                                        icon={<FaTrash />}
-                                                        colorScheme="red"
-                                                        onClick={() => handleRemovePlant(plant.id)}
-                                                    />
-                                                </VStack>
+                                                <Image
+                                                    src={plant.img_url}
+                                                    alt={plant.name}
+                                                    boxSize="100%" // Ensures image takes the full grid item
+                                                    objectFit="cover"
+                                                    fallbackSrc="https://via.placeholder.com/150"
+                                                />
                                             </GridItem>
                                         )}
                                     </Draggable>
@@ -261,7 +238,6 @@ const Layouts = () => {
                 </Droppable>
             </DragDropContext>
 
-            {/* Add Plant Modal */}
             <Modal isOpen={isAddModalOpen} onClose={onAddClose}>
                 <ModalOverlay />
                 <ModalContent>
@@ -289,9 +265,7 @@ const Layouts = () => {
                                         boxSize="100px"
                                         objectFit="cover"
                                     />
-                                    <Text mt={2} fontWeight="bold" color="white">
-                                        {plant.name}
-                                    </Text>
+                                    <Text>{plant.name}</Text>
                                 </Box>
                             ))}
                         </VStack>

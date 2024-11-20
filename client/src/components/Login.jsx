@@ -71,6 +71,7 @@ const Login = ({ onLogin }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="off" // Disable autofill
           />
         </FormControl>
         <FormControl mb={4}>
@@ -81,6 +82,7 @@ const Login = ({ onLogin }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="off" // Disable autofill
           />
         </FormControl>
         <Button

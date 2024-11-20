@@ -24,21 +24,20 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const response = await register(username, email, password);
-        if (response.access_token) {
-            localStorage.setItem('access_token', response.access_token);
-            localStorage.setItem('username', username); // Store username
-            navigate('/home');  // Navigate to the home page or a different route after registration
-        } else {
-            alert(response.msg || 'Registration successful, please log in.');
-            navigate('/login');
-        }
+      const response = await register(username, email, password);
+      if (response.access_token) {
+        localStorage.setItem('access_token', response.access_token);
+        localStorage.setItem('username', username); // Store username
+        navigate('/home');  // Navigate to the home page or a different route after registration
+      } else {
+        alert(response.msg || 'Registration successful, please log in.');
+        navigate('/login');
+      }
     } catch (error) {
-        console.error('Registration failed:', error);
-        alert(error.message || 'An error occurred during registration.');
+      console.error('Registration failed:', error);
+      alert(error.message || 'An error occurred during registration.');
     }
-};
-
+  };
 
   return (
     <Box
@@ -62,6 +61,7 @@ const Register = () => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            autoComplete="off" // Disable autofill
           />
         </FormControl>
         <FormControl mb={4}>
@@ -72,6 +72,7 @@ const Register = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="off" // Disable autofill
           />
         </FormControl>
         <FormControl mb={4}>
@@ -82,7 +83,11 @@ const Register = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="off" // Disable autofill
           />
+          <Text fontSize="sm" mt={2} color="gray.500" textAlign="center">
+            Note: Please remember your password as it cannot be changed after registration.
+          </Text>
         </FormControl>
         <Button colorScheme="teal" type="submit" width="full" mt={4}>
           Register
