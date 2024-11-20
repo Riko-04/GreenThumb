@@ -1,6 +1,6 @@
 from datetime import datetime
 import json
-from flask import Flask, request, send_from_directory, jsonify, make_response, url_for, abort
+from flask import Flask, current_app, request, send_from_directory, jsonify, make_response, url_for, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
@@ -330,31 +330,60 @@ def get_layouts():
 @jwt_required()
 def create_layout():
     data = request.json
+
+    # Check if required fields are present
     if not data or 'name' not in data or 'layout_data' not in data:
         abort(400, description='Missing required fields')
 
+    # Validate grid_columns, defaulting to 3 if missing or invalid
+    grid_columns = data.get('grid_columns')
+    if grid_columns is None:
+        abort(400, description='grid_columns is required')
+    if not isinstance(grid_columns, int) or grid_columns <= 0:
+        abort(400, description='Invalid grid_columns value')
+
     user_id = get_jwt_identity()
+
+    # Serialize layout_data to a JSON string
     try:
-        layout_data_str = json.dumps(data['layout_data'])  # Serialize layout_data to JSON string
+        layout_data_str = json.dumps(data['layout_data'])
     except (TypeError, ValueError):
         abort(400, description='Invalid layout data format')
 
-    layout = Layout(name=data['name'], layout_data=layout_data_str, user_id=user_id)
+    # Create and save the new layout
+    layout = Layout(
+        name=data['name'],
+        layout_data=layout_data_str,
+        grid_columns=grid_columns,
+        user_id=user_id
+    )
     db.session.add(layout)
     db.session.commit()
     return jsonify(layout.to_dict()), 201
+
 
 @app.route('/layouts/<int:id>', methods=['PATCH'])
 @jwt_required()
 def update_layout(id):
     user_id = get_jwt_identity()
     layout = Layout.query.filter_by(id=id, user_id=user_id).first()
+    
     if not layout:
         abort(404, description='Layout not found')
 
     data = request.json
+
+    # Check if grid_columns is provided and valid
+    if 'grid_columns' in data:
+        grid_columns = data['grid_columns']
+        if not isinstance(grid_columns, int) or grid_columns <= 0:
+            abort(400, description='Invalid grid_columns value')
+        layout.grid_columns = grid_columns
+
+    # Update other fields if provided
     if 'name' in data:
         layout.name = data['name']
+
     if 'layout_data' in data:
         try:
             layout.layout_data = json.dumps(data['layout_data'])  # Serialize updated layout_data
@@ -363,6 +392,7 @@ def update_layout(id):
 
     db.session.commit()
     return jsonify(layout.to_dict()), 200
+
 
 @app.route('/layouts/<int:id>', methods=['DELETE'])
 @jwt_required()
@@ -377,7 +407,7 @@ def delete_layout(id):
     return '', 204
 
 
-# Route to fetch all forum posts with comments
+# Route to fetch all forum posts with their comments
 @app.route('/forum_posts', methods=['GET'])
 @jwt_required()
 def get_forum_posts():
@@ -388,12 +418,21 @@ def get_forum_posts():
             'title': post.title,
             'content': post.content,
             'author': post.user.username,
-            'created_at': post.created_at,
-            'comments': [{'id': comment.id, 'content': comment.content, 'author': comment.user.username, 'date_created': comment.date_created} for comment in post.comments]
+            'created_at': post.created_at.strftime('%Y-%m-%d %H:%M:%S') if post.created_at else None,
+            'comments': [
+                {
+                    'id': comment.id,
+                    'content': comment.content,
+                    'author': comment.user.username,
+                    'date_created': comment.date_created.strftime('%Y-%m-%d %H:%M:%S') if comment.date_created else None
+                }
+                for comment in post.comments
+            ]
         } for post in posts]
         return jsonify(posts_list), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error fetching forum posts: {e}")
+        return jsonify({'error': 'An error occurred while fetching forum posts'}), 500
 
 
 # Route to add a new forum post
@@ -404,17 +443,16 @@ def add_forum_post():
         return jsonify({'error': 'Request must be JSON'}), 400
 
     data = request.get_json()
-    print("Received data:", data)
-
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
 
+    # Fetch the user making the request
+    user = User.query.get(current_user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    # Validate title and content fields
-    title = data.get('title')
-    content = data.get('content')
+    # Extract and validate title and content
+    title = data.get('title', '').strip()
+    content = data.get('content', '').strip()
 
     if not title:
         return jsonify({'error': 'Title is required'}), 400
@@ -422,7 +460,7 @@ def add_forum_post():
         return jsonify({'error': 'Content is required'}), 400
 
     try:
-        # Create the new forum post
+        # Create and save the new post
         new_post = ForumPost(title=title, content=content, user_id=user.id)
         db.session.add(new_post)
         db.session.commit()
@@ -434,49 +472,62 @@ def add_forum_post():
                 'title': new_post.title,
                 'content': new_post.content,
                 'author': user.username,
-                'created_at': new_post.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                'created_at': new_post.created_at.strftime('%Y-%m-%d %H:%M:%S') if new_post.created_at else None
             }
         }), 201
-
     except Exception as e:
-        print(f"Error adding forum post: {e}")
-        db.session.rollback()  # Rollback the session in case of error
+        current_app.logger.error(f"Error adding forum post: {e}")
+        db.session.rollback()
         return jsonify({'error': 'An error occurred while adding the forum post'}), 500
 
 
-# Route to update a forum post
+# Route to update an existing forum post
 @app.route('/forum_posts/<int:post_id>', methods=['PUT'])
 @jwt_required()
 def update_forum_post(post_id):
-    data = request.json
-    current_user_id = get_jwt_identity()
-    post = ForumPost.query.get_or_404(post_id)
-    user = User.query.get(current_user_id)
-
-    # Check if the logged-in user is the author of the post
-    if post.user_id != current_user_id:
-        return jsonify({'error': 'Permission denied'}), 403
-
     try:
-        # Update post title and content
-        post.title = data.get('title', post.title)
-        post.content = data.get('content', post.content)
+        if not request.is_json:
+            return jsonify({'error': 'Request must be JSON'}), 400
+
+        data = request.get_json()
+        current_user_id = get_jwt_identity()
+
+        # Fetch the post and verify ownership
+        post = ForumPost.query.get_or_404(post_id)
+        if post.user_id != current_user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+
+        # Extract and validate the updated title and content
+        title = data.get('title', '').strip()
+        content = data.get('content', '').strip()
+
+        if not title:
+            return jsonify({'error': 'Title is required'}), 400
+        if not content:
+            return jsonify({'error': 'Content is required'}), 400
+
+        # Update the post details
+        post.title = title
+        post.content = content
         db.session.commit()
 
-        # Return the updated post along with the username of the author
-        return jsonify({
+        # Prepare the response
+        response = {
             'message': 'Forum post updated successfully',
             'post': {
                 'id': post.id,
                 'title': post.title,
                 'content': post.content,
-                'author': user.username,  # Include username
-                'updated_at': post.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+                'author': post.user.username,
+                'updated_at': post.updated_at.strftime('%Y-%m-%d %H:%M:%S') if post.updated_at else None
             }
-        }), 200
-
+        }
+        return jsonify(response), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error updating forum post: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'An error occurred while updating the forum post'}), 500
+
 
 
 # Route to delete a forum post
@@ -540,24 +591,35 @@ def update_comment(comment_id):
     if comment.user_id != current_user_id:
         return jsonify({'error': 'Permission denied'}), 403
 
+    # Validate content field
+    if 'content' not in data or not data['content'].strip():
+        return jsonify({'error': 'Content is required'}), 400
+
     try:
         # Update the comment content
-        comment.content = data.get('content', comment.content)
+        comment.content = data['content']
         db.session.commit()
 
-        # Return the updated comment along with the username of the commenter
-        return jsonify({
+        # Return the updated comment
+        response = {
             'message': 'Comment updated successfully',
             'comment': {
                 'id': comment.id,
                 'content': comment.content,
-                'author': user.username,  # Include username
-                'updated_at': comment.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+                'author': user.username  # Include username
             }
-        }), 200
+        }
+
+        # Include 'updated_at' if it exists in the model
+        if hasattr(comment, 'updated_at'):
+            response['comment']['updated_at'] = comment.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+
+        return jsonify(response), 200
 
     except Exception as e:
+        db.session.rollback()  # Rollback in case of an error
         return jsonify({'error': str(e)}), 500
+
 
 
 # Route to delete a comment

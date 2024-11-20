@@ -23,6 +23,9 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 class Plant(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,6 +85,8 @@ class ForumPost(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     comments = db.relationship('Comment', backref='forum_post', lazy=True, cascade="all, delete-orphan")
 
+    __table_args__ = (db.Index('idx_forum_post_user_id', 'user_id'),)
+
     def __repr__(self):
         return f'<ForumPost {self.title}>'
 
@@ -91,6 +96,11 @@ class Comment(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('forum_post.id'), nullable=False)
+
+    __table_args__ = (db.Index('idx_comment_post_id', 'post_id'),)
+
+    def __repr__(self):
+        return f'<Comment {self.id} by {self.user.username}>'
 
 
 class Layout(db.Model):
