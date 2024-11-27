@@ -483,18 +483,16 @@ def update_forum_post(post_id):
         if post.user_id != current_user_id:
             return jsonify({'error': 'Permission denied'}), 403
 
-        # Extract and validate the updated title and content
-        title = data.get('title', '').strip()
-        content = data.get('content', '').strip()
+        # Update fields if provided
+        title = data.get('title')
+        content = data.get('content')
+        if not title and not content:
+            return jsonify({'error': 'At least one of title or content is required'}), 400
 
-        if not title:
-            return jsonify({'error': 'Title is required'}), 400
-        if not content:
-            return jsonify({'error': 'Content is required'}), 400
+        post.title = title if title else post.title
+        post.content = content if content else post.content
 
-        # Update the post details
-        post.title = title
-        post.content = content
+        # Save changes
         db.session.commit()
 
         # Prepare the response
@@ -513,7 +511,6 @@ def update_forum_post(post_id):
         current_app.logger.error(f"Error updating forum post: {e}")
         db.session.rollback()
         return jsonify({'error': 'An error occurred while updating the forum post'}), 500
-
 
 
 # Route to delete a forum post
