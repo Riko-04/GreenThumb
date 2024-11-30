@@ -62,12 +62,13 @@ const PhotoCarousel = () => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Auto-slide effect
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
-    }, 3000); // Change slide every 3 seconds
+    }, 3000); // 3 seconds per slide
 
-    return () => clearInterval(interval);
+    return () => clearInterval(interval); // Clear interval on unmount
   }, [slides.length]);
 
   const handleCircleClick = (index) => {
@@ -82,12 +83,11 @@ const PhotoCarousel = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
   };
 
-  const { imageUrl, message } = slides[currentIndex];
-
   return (
-    <Box position="relative" width="full" height="82vh" overflow="hidden" marginTop="-0.5">
+    <Box position="relative" width="full" height="87vh" overflow="hidden">
+      {/* Background Image */}
       <Image
-        src={imageUrl}
+        src={slides[currentIndex].imageUrl}
         alt={`Slide ${currentIndex + 1}`}
         objectFit="cover"
         width="100%"
@@ -97,45 +97,52 @@ const PhotoCarousel = () => {
         left="0"
         zIndex="-1"
       />
+
+      {/* Slide Message */}
       <Flex
         position="relative"
         width="full"
         height="full"
         justify="center"
         align="center"
-        zIndex="1"
-        bgGradient="linear(to-b, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5))"
+        bgGradient="linear(to-b, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6))"
       >
-        <VStack textAlign="center" color="white" spacing={4}>
+        <VStack spacing={4} color="white" textAlign="center">
           <Text fontSize="4xl" fontWeight="bold">
-            {message}
+            {slides[currentIndex].message}
           </Text>
         </VStack>
       </Flex>
 
       {/* Navigation Arrows */}
       <IconButton
-        icon={<ArrowLeftIcon boxSize={8} />}
+        icon={<ArrowLeftIcon boxSize={7} />}
         position="absolute"
-        top="70%" // Position just below the center
+        top="70%"
+        bottom="20%"
         left="20px"
-        zIndex="2"
-        colorScheme="teal"
-        variant="ghost"
-        opacity={0.7} // Make the arrows less visible
         onClick={handlePrevSlide}
+        zIndex="2"
+        color="teal"
+        opacity={0.7}
+        bg="transparent"
+        _hover={{ color: 'teal.300' }}
+        _active={{ bg: 'transparent' }}
         aria-label="Previous Slide"
       />
       <IconButton
-        icon={<ArrowRightIcon boxSize={8} />}
+        icon={<ArrowRightIcon boxSize={7} />}
         position="absolute"
-        top="70%" // Position just below the center
-        right="20px"
-        zIndex="2"
-        colorScheme="teal"
-        variant="ghost"
-        opacity={0.7} // Make the arrows less visible
+        top="70%"
+        bottom="20%"
+        right="10px"
         onClick={handleNextSlide}
+        zIndex="2"
+        color="teal"
+        opacity={0.7}
+        bg="transparent"
+        _hover={{ color: 'teal.300' }}
+        _active={{ bg: 'transparent' }}
         aria-label="Next Slide"
       />
 
@@ -145,11 +152,12 @@ const PhotoCarousel = () => {
           <Circle
             key={index}
             size="12px"
-            bg={index === currentIndex ? 'teal.300' : 'whiteAlpha.800'}
-            opacity={index === currentIndex ? 1 : 0.5}
+            bg={index === currentIndex ? 'teal.400' : 'whiteAlpha.800'}
+            opacity={index === currentIndex ? 1 : 0.6}
             cursor="pointer"
             onClick={() => handleCircleClick(index)}
-            mx={1}
+            _hover={{ transform: 'scale(1.2)' }}
+            mx={2}
           />
         ))}
       </HStack>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, Text, Flex, useColorModeValue } from '@chakra-ui/react';
+import { FaPhone, FaEnvelope } from 'react-icons/fa';
 
 const Footer = () => {
   return (
@@ -11,7 +11,19 @@ const Footer = () => {
       width="100%"
       textAlign="center"
     >
-      <Text>&copy; {new Date().getFullYear()} GreenThumb. All rights reserved.</Text>
+      <Text mb={2}>&copy; {new Date().getFullYear()} GreenThumb. All rights reserved.</Text>
+      <Flex justify="center" align="center" gap={4}>
+        <Flex align="center" gap={2}>
+          <FaPhone />
+          <Text as="span">+254 706 258 077</Text>
+        </Flex>
+        <Flex align="center" gap={2}>
+          <FaEnvelope />
+          <Text>
+            echoge2003@gmail.com
+          </Text>
+        </Flex>
+      </Flex>
     </Box>
   );
 };
