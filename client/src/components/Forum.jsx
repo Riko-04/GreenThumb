@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/jsx-no-duplicate-props */
 import { useState, useEffect } from 'react';
 import {
   Box,
@@ -24,8 +26,8 @@ import {
   useToast,
   useColorMode,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
-import { BsThreeDotsVertical, BsChatDots } from 'react-icons/bs'; // Added forum icon
+import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
+import { BsThreeDotsVertical, BsChatDots } from 'react-icons/bs';
 import {
   fetchForumPosts,
   addForumPost,
@@ -46,6 +48,8 @@ const Forum = () => {
   const [editingComment, setEditingComment] = useState({ id: null, postId: null });
   const [editCommentContent, setEditCommentContent] = useState('');
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const toast = useToast();
   const { colorMode } = useColorMode();
 
@@ -120,24 +124,30 @@ const Forum = () => {
     }
   };
 
-  const handleDeleteForumPost = async (postId) => {
+  const handleDeleteForumPost = async () => {
     try {
-      await deleteForumPost(postId);
+      if (itemToDelete && itemToDelete.type === 'post') {
+        await deleteForumPost(itemToDelete.id);
+      } else if (itemToDelete && itemToDelete.type === 'comment') {
+        await deleteComment(itemToDelete.id);
+      }
       toast({
-        title: 'Post deleted successfully',
+        title: 'Item deleted successfully',
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
       loadPosts();
+      setIsDeleteModalOpen(false);
     } catch (error) {
       toast({
-        title: 'Error deleting post',
+        title: 'Error deleting item',
         description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -198,25 +208,9 @@ const Forum = () => {
     setIsCommentModalOpen(true);
   };
 
-  const handleDeleteComment = async (commentId) => {
-    try {
-      await deleteComment(commentId);
-      toast({
-        title: 'Comment deleted successfully',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-      loadPosts();
-    } catch (error) {
-      toast({
-        title: 'Error deleting comment',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    }
+  const handleDeleteComment = (commentId) => {
+    setItemToDelete({ id: commentId, type: 'comment' });
+    setIsDeleteModalOpen(true);
   };
 
   const openModal = (post = null) => {
@@ -230,28 +224,26 @@ const Forum = () => {
     setIsModalOpen(false);
   };
 
+  const handleDeletePost = (postId) => {
+    setItemToDelete({ id: postId, type: 'post' });
+    setIsDeleteModalOpen(true);
+  };
+
   return (
     <Box p={4} bg={colorMode === 'dark' ? 'gray.800' : 'gray.100'}>
       <VStack spacing={4} align="center" bg="teal.500" color="white" borderRadius="md" p={4} mb={6} shadow="md">
-        <Icon
-          as={BsChatDots}
-          boxSize={12} 
-          color="white"
-          aria-label="Forum Icon"
-        />
+        <Icon as={BsChatDots} boxSize={12} color="white" aria-label="Forum Icon" />
         <Heading size="md">Community Forum</Heading>
         <Text fontSize="lg" textAlign="center">
-        <Box mb={2}>
-          Share your thoughts and experiences with other gardeners. Connect, learn, and grow together!
-        </Box>
-        <Box>
-          Note: Please keep your responses respectful and considerate of others.
-        </Box>
+          <Box mb={2}>
+            Share your thoughts and experiences with other gardeners. Connect, learn, and grow together!
+          </Box>
+          <Box>Note: Please keep your responses respectful and considerate of others.</Box>
         </Text>
       </VStack>
       <Text color="red.500" mt={0} mb={2}>Changes can only be made by the owner</Text>
-      <Button onClick={() => openModal()} leftIcon={<AddIcon />} colorScheme="teal" mb={4}>
-        New Post
+      <Button onClick={() => openModal()} colorScheme="teal" mb={4}>
+        Add Post
       </Button>
 
       <VStack spacing={4} align="stretch">
@@ -279,7 +271,7 @@ const Forum = () => {
                     <MenuItem icon={<EditIcon />} onClick={() => openModal(post)}>
                       Edit Post
                     </MenuItem>
-                    <MenuItem icon={<DeleteIcon />} onClick={() => handleDeleteForumPost(post.id)}>
+                    <MenuItem icon={<DeleteIcon />} onClick={() => handleDeletePost(post.id)}>
                       Delete Post
                     </MenuItem>
                   </MenuList>
@@ -287,25 +279,33 @@ const Forum = () => {
               </Flex>
               <Text mt={2}>{post.content}</Text>
 
-              <Text fontSize="sm" mt={4} fontWeight="bold">
+              <Text fontSize="md" mt={4} mb={3} fontWeight="bold">
                 Comments
               </Text>
-              <VStack align="start" mt={2} spacing={3}>
+              <Flex mt={2} w="100%">
+                <Input
+                  placeholder="Write a comment..."
+                  value={commentContents[post.id] || ''}
+                  onChange={(e) => handleCommentChange(post.id, e.target.value)}
+                  size="sm"
+                  mr={2}
+                />
+                <Button onClick={() => handleAddComment(post.id)} colorScheme="teal" size="sm" isDisabled={!commentContents[post.id]?.trim()}>
+                  Add Comment
+                </Button>
+              </Flex>
+              <VStack align="start" mt={2} spacing={2}>
                 {post.comments.map((comment) => (
-                  <Box
-                    key={comment.id}
-                    p={2}
-                    bg={colorMode === 'dark' ? 'gray.600' : 'gray.100'}
-                    borderRadius="md"
-                    w="100%"
-                  >
+                  <Box key={comment.id} p={3} borderRadius="md" bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'} w="100%">
                     <Flex justifyContent="space-between" alignItems="center">
-                      <Text>{comment.content}</Text>
+                      <Text fontSize="md" color={colorMode === 'dark' ? 'gray.300' : 'gray.700'}>
+                        {comment.content}
+                      </Text>
                       <Text fontSize="sm" color="gray.500">
                         ~ {comment.author}
                       </Text>
                       <Menu>
-                        <MenuButton as={IconButton} icon={<BsThreeDotsVertical />} variant="ghost" size="sm" />
+                        <MenuButton as={IconButton} icon={<BsThreeDotsVertical />} variant="ghost" />
                         <MenuList>
                           <MenuItem icon={<EditIcon />} onClick={() => handleEditComment(comment, post.id)}>
                             Edit Comment
@@ -318,26 +318,15 @@ const Forum = () => {
                     </Flex>
                   </Box>
                 ))}
-                <Flex mt={2} w="100%">
-                  <Input
-                    placeholder="Write a comment..."
-                    value={commentContents[post.id] || ''}
-                    onChange={(e) => handleCommentChange(post.id, e.target.value)}
-                    size="sm"
-                    mr={2}
-                  />
-                  <Button onClick={() => handleAddComment(post.id)} colorScheme="teal" size="sm" isDisabled={!commentContents[post.id]?.trim()}>
-                    Comment
-                  </Button>
-                </Flex>
               </VStack>
             </Box>
           ))
         ) : (
-          <Text>No posts available.</Text>
+          <Text>No posts available. Start a conversation!</Text>
         )}
       </VStack>
 
+      {/* Modal for creating/editing posts */}
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         <ModalOverlay />
         <ModalContent>
@@ -345,28 +334,49 @@ const Forum = () => {
           <ModalCloseButton />
           <ModalBody>
             <Input
-              placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              mb={3}
+              placeholder="Post Title"
+              mb={4}
             />
             <Textarea
-              placeholder="Content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              placeholder="Post Content"
+              mb={4}
+              height="150px"
             />
           </ModalBody>
+
           <ModalFooter>
-            <Button onClick={handleAddOrUpdateForumPost} colorScheme="teal">
-              {currentPost ? 'Update' : 'Add'}
+            <Button colorScheme="teal" onClick={handleAddOrUpdateForumPost} mr={3}>
+              {currentPost ? 'Update' : 'Post'}
             </Button>
-            <Button onClick={closeModal} ml={3}>
-              Cancel
-            </Button>
+            <Button variant="ghost" onClick={closeModal}>Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
+      {/* Modal for confirming delete */}
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm Delete</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>Are you sure you want to delete this item?</Text>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="red" onClick={handleDeleteForumPost} mr={3}>
+              Delete
+            </Button>
+            <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal for editing comments */}
       <Modal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)}>
         <ModalOverlay />
         <ModalContent>
@@ -374,16 +384,19 @@ const Forum = () => {
           <ModalCloseButton />
           <ModalBody>
             <Textarea
-              placeholder="Edit Comment"
               value={editCommentContent}
               onChange={(e) => setEditCommentContent(e.target.value)}
+              placeholder="Edit your comment"
+              mb={4}
+              height="100px"
             />
           </ModalBody>
+
           <ModalFooter>
-            <Button onClick={handleUpdateComment} colorScheme="teal">
-              Update
+            <Button colorScheme="teal" onClick={handleUpdateComment} mr={3}>
+              Save Changes
             </Button>
-            <Button onClick={() => setIsCommentModalOpen(false)} ml={3}>
+            <Button variant="ghost" onClick={() => setIsCommentModalOpen(false)}>
               Cancel
             </Button>
           </ModalFooter>

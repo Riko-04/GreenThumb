@@ -29,7 +29,7 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, InfoIcon, EditIcon } from '@chakra-ui/icons';
+import { DeleteIcon, InfoIcon, EditIcon } from '@chakra-ui/icons';
 import { BsThreeDotsVertical } from 'react-icons/bs'; // 3-dot menu icon
 import { fetchTips, addTip, updateTip, deleteTip } from '../utils/api';
 
@@ -175,7 +175,7 @@ const Tips = () => {
         </Text>
       </VStack>
       <Text color="red.500" mt={0} mb={2}>Changes can only be made by the owner</Text>
-      <Button onClick={() => openModal()} leftIcon={<AddIcon />} colorScheme="teal" mb={4}>
+      <Button onClick={() => openModal()} colorScheme="teal" mb={4}>
         Add Tip
       </Button>
 
@@ -200,6 +200,10 @@ const Tips = () => {
                   <Heading size="md">{tip.title}</Heading>
                   <Text mt={2} isTruncated>
                     {tip.content}
+                  </Text>
+                  {/* Display the author's username */}
+                  <Text fontSize="sm" color="gray.500" mt={2}>
+                    Author: {tip.author}
                   </Text>
                 </Box>
                 <Menu>
@@ -278,11 +282,11 @@ const Tips = () => {
             </AlertDialogBody>
 
             <AlertDialogFooter>
+              <Button colorScheme="red" onClick={handleDeleteTip} mr={3}>
+                Delete
+              </Button>
               <Button ref={cancelRef} onClick={() => setIsAlertOpen(false)}>
                 Cancel
-              </Button>
-              <Button colorScheme="red" onClick={handleDeleteTip} ml={3}>
-                Delete
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

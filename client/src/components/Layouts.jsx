@@ -190,13 +190,13 @@ const Layouts = () => {
 
             <HStack spacing={2} alignItems="center" mb={4}>
                 <Button onClick={onAddOpen} leftIcon={<FaThLarge />}>
-                    Add Plant to Layout
+                    Add Plant
                 </Button>
                 <Button onClick={handleSaveLayout} leftIcon={<FaSave />}>
-                    Save Layout
+                    Save 
                 </Button>
                 <Button colorScheme="red" onClick={onClearOpen} leftIcon={<FaTrash />}>
-                    Clear Layout
+                    Delete
                 </Button>
             </HStack>
 
@@ -291,16 +291,16 @@ const Layouts = () => {
             <Modal isOpen={isClearModalOpen} onClose={onClearClose}>
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader>Confirm Clear Layout</ModalHeader>
+                    <ModalHeader>Confirm Layout Deletion</ModalHeader>
                     <ModalBody>
-                        <Text>Are you sure you want to clear your layout? This action cannot be undone.</Text>
+                        <Text>Are you sure you want to delete your layout? This action cannot be undone.</Text>
                     </ModalBody>
                     <ModalFooter>
+                        <Button colorScheme="red" onClick={handleClearLayout}>
+                            Delete
+                        </Button>
                         <Button variant="ghost" onClick={onClearClose}>
                             Cancel
-                        </Button>
-                        <Button colorScheme="red" onClick={handleClearLayout}>
-                            Clear Layout
                         </Button>
                     </ModalFooter>
                 </ModalContent>

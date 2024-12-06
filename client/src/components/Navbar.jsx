@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
   Flex,
@@ -22,8 +22,11 @@ import { FaThumbsUp } from 'react-icons/fa';
 const Navbar = ({ isAuthenticated, onLogout }) => {
   const { colorMode, toggleColorMode } = useColorMode();
   const { isOpen, onToggle } = useDisclosure();
+  const location = useLocation(); // Detect the current route
   const linkColor = useColorModeValue('black', 'white');
   const bgColor = useColorModeValue('gray.100', 'gray.900');
+  const activeColor = 'teal.500'; // Color for the active route
+  const hoverColor = 'teal.400'; // Hover color effect
   const logoColor = 'teal.500';
   const fontStyle = { fontFamily: 'Pacifico, cursive', fontWeight: 'bold', fontSize: '2xl' };
   const isDesktop = useBreakpointValue({ base: false, md: true });
@@ -33,6 +36,13 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
     navigate(path);
     onToggle();
   };
+
+  // Helper function for active link styling
+  const getLinkStyle = (path) => ({
+    color: location.pathname === path ? activeColor : linkColor,
+    textDecoration: location.pathname === path ? 'underline' : 'none',
+    _hover: { color: hoverColor },
+  });
 
   return (
     <Flex
@@ -55,7 +65,6 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
         maxW="1200px"
         justify="space-between"
       >
-        {/* Logo and app name wrapped in RouterLink for navigation */}
         <HStack spacing={2} mr="auto" align="center">
           <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
             <HStack spacing={2} align="center">
@@ -69,22 +78,21 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
 
         {isDesktop ? (
           <HStack spacing={4} display={{ base: 'none', md: 'flex' }} flex="1" justify="center">
-            <Link as={RouterLink} to="/home" color={linkColor}>Home</Link>
-            <Link as={RouterLink} to="/plants" color={linkColor}>Plants</Link>
-            <Link as={RouterLink} to="/careschedule" color={linkColor}>Care Schedule</Link>
-            <Link as={RouterLink} to="/tips" color={linkColor}>Tips</Link>
-            <Link as={RouterLink} to="/forum" color={linkColor}>Forum</Link>
-            <Link as={RouterLink} to="/layout" color={linkColor}>Layout</Link>
-            <Link as={RouterLink} to="/about" color={linkColor}>About</Link>
-            <Link as={RouterLink} to="/faq" color={linkColor}>FAQs</Link>
+            <Link as={RouterLink} to="/home" {...getLinkStyle('/home')}>Home</Link>
+            <Link as={RouterLink} to="/plants" {...getLinkStyle('/plants')}>Plants</Link>
+            <Link as={RouterLink} to="/careschedule" {...getLinkStyle('/careschedule')}>Care Schedule</Link>
+            <Link as={RouterLink} to="/tips" {...getLinkStyle('/tips')}>Tips</Link>
+            <Link as={RouterLink} to="/forum" {...getLinkStyle('/forum')}>Forum</Link>
+            <Link as={RouterLink} to="/layout" {...getLinkStyle('/layout')}>Layout</Link>
+            <Link as={RouterLink} to="/about" {...getLinkStyle('/about')}>About</Link>
+            <Link as={RouterLink} to="/faq" {...getLinkStyle('/faq')}>FAQs</Link>
             {isAuthenticated ? (
               <Button colorScheme="teal" onClick={onLogout}>
                 Logout
               </Button>
             ) : (
               <>
-                <Link as={RouterLink} to="/login" color={linkColor}>Login</Link>
-                {/* <Link as={RouterLink} to="/register" color={linkColor}>Register</Link> */}
+                <Link as={RouterLink} to="/login" {...getLinkStyle('/login')}>Login</Link>
               </>
             )}
           </HStack>
@@ -109,24 +117,23 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
                 right="0"
                 borderRadius="md"
                 zIndex={1}
-                align="center" // Center items in the dropdown menu
+                align="center"
               >
-                <Link as={RouterLink} to="/home" color={linkColor} onClick={() => handleNavigation('/home')}>Home</Link>
-                <Link as={RouterLink} to="/plants" color={linkColor} onClick={() => handleNavigation('/plants')}>Plants</Link>
-                <Link as={RouterLink} to="/careschedule" color={linkColor} onClick={() => handleNavigation('/careschedule')}>Care Schedule</Link>
-                <Link as={RouterLink} to="/tips" color={linkColor} onClick={() => handleNavigation('/tips')}>Tips</Link>
-                <Link as={RouterLink} to="/forum" color={linkColor} onClick={() => handleNavigation('/forum')}>Forum</Link>
-                <Link as={RouterLink} to="/layout" color={linkColor} onClick={() => handleNavigation('/layout')}>Layout</Link>
-                <Link as={RouterLink} to="/about" color={linkColor} onClick={() => handleNavigation('/about')}>About</Link>
-                <Link as={RouterLink} to="/faq" color={linkColor} onClick={() => handleNavigation('/faq')}>FAQs</Link>
+                <Link as={RouterLink} to="/home" {...getLinkStyle('/home')} onClick={() => handleNavigation('/home')}>Home</Link>
+                <Link as={RouterLink} to="/plants" {...getLinkStyle('/plants')} onClick={() => handleNavigation('/plants')}>Plants</Link>
+                <Link as={RouterLink} to="/careschedule" {...getLinkStyle('/careschedule')} onClick={() => handleNavigation('/careschedule')}>Care Schedule</Link>
+                <Link as={RouterLink} to="/tips" {...getLinkStyle('/tips')} onClick={() => handleNavigation('/tips')}>Tips</Link>
+                <Link as={RouterLink} to="/forum" {...getLinkStyle('/forum')} onClick={() => handleNavigation('/forum')}>Forum</Link>
+                <Link as={RouterLink} to="/layout" {...getLinkStyle('/layout')} onClick={() => handleNavigation('/layout')}>Layout</Link>
+                <Link as={RouterLink} to="/about" {...getLinkStyle('/about')} onClick={() => handleNavigation('/about')}>About</Link>
+                <Link as={RouterLink} to="/faq" {...getLinkStyle('/faq')} onClick={() => handleNavigation('/faq')}>FAQs</Link>
                 {isAuthenticated ? (
                   <Button colorScheme="teal" onClick={onLogout}>
                     Logout
                   </Button>
                 ) : (
                   <>
-                    <Link as={RouterLink} to="/login" color={linkColor} onClick={() => handleNavigation('/login')}>Login</Link>
-                    {/* <Link as={RouterLink} to="/register" color={linkColor} onClick={() => handleNavigation('/register')}>Register</Link> */}
+                    <Link as={RouterLink} to="/login" {...getLinkStyle('/login')} onClick={() => handleNavigation('/login')}>Login</Link>
                   </>
                 )}
               </Stack>
@@ -140,7 +147,7 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
             onClick={toggleColorMode}
             variant="outline"
             aria-label="Toggle dark mode"
-            mr={2} // Adjusted margin-right to bring closer
+            mr={2}
           />
         </Flex>
       </Flex>
