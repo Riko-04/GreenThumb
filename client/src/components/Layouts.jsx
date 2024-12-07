@@ -291,12 +291,12 @@ const Layouts = () => {
             <Modal isOpen={isClearModalOpen} onClose={onClearClose}>
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader>Confirm Layout Deletion</ModalHeader>
+                    <ModalHeader>Delete Layout</ModalHeader>
                     <ModalBody>
-                        <Text>Are you sure you want to delete your layout? This action cannot be undone.</Text>
+                        <Text>Are you sure you want to delete your layout?</Text>
                     </ModalBody>
-                    <ModalFooter>
-                        <Button colorScheme="red" onClick={handleClearLayout}>
+                    <ModalFooter mr={2}>
+                        <Button colorScheme="red" onClick={handleClearLayout} mr={2}>
                             Delete
                         </Button>
                         <Button variant="ghost" onClick={onClearClose}>

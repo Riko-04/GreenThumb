@@ -278,7 +278,7 @@ const Tips = () => {
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              Are you sure you want to delete this tip? This action cannot be undone.
+              Are you sure you want to delete this tip?
             </AlertDialogBody>
 
             <AlertDialogFooter>

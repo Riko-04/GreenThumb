@@ -129,6 +129,8 @@ const Plants = () => {
         duration: 3000,
         isClosable: true,
       });
+      onDeleteClose();
+      setCurrentPlant(null);
       fetchPlantsData();
     } catch (error) {
       console.error('Error deleting plant:', error);

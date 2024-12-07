@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import {
@@ -388,7 +389,7 @@ const CareSchedule = () => {
       <Modal isOpen={isDeleteModalOpen} onClose={onCloseDeleteModal}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Confirm Deletion</ModalHeader>
+          <ModalHeader>Delete Care Schedule</ModalHeader>
           <ModalBody>
             Are you sure you want to delete this care schedule?
           </ModalBody>
